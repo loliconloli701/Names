@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Освобождаем место (критично для numpy и pillow)
+      # 1. Очистка диска (ОБЯЗАТЕЛЬНО для сборки с numpy/pillow)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -21,7 +21,7 @@ jobs:
           large-packages: true
           swap-storage: true
 
-      # 2. Установка системных библиотек
+      # 2. Установка системных зависимостей (Полный список для Kivy 2.3.0)
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -34,21 +34,20 @@ jobs:
             pkg-config libncurses5-dev libncursesw5-dev libtinfo5 cmake \
             openjdk-17-jdk unzip zip autopoint gettext
 
-          # Обновляем pip
           pip3 install --upgrade pip
           
-          # Устанавливаем Buildozer
-          # Kivy 2.3.0 хорошо работает с Cython 3, но Buildozer пока лучше держать на 0.29.33 для стабильности p4a
-          pip3 install buildozer cython==0.29.33
+          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
+          # Ставим Cython версии 3+, так как Kivy 2.3.0 требует именно его.
+          pip3 install buildozer "cython>=3.0.0"
 
-      # 3. Сборка (права root разрешены)
+      # 3. Запуск сборки
       - name: Build with Buildozer
         env:
           BUILDOZER_ALLOW_ROOT: 1
         run: |
           yes | buildozer android debug
 
-      # 4. Загрузка результата
+      # 4. Загрузка готового файла
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
