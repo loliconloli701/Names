@@ -7,7 +7,7 @@ source.include_exts = py,png,jpg,kv,atlas
 version = 1.0
 
 # ВАЖНО: Список библиотек
-requirements = python3,kivy==2.2.0,kivymd,pillow,numpy,android
+requirements = python3,kivy==2.3.0,kivymd,pillow,numpy,android
 
 # Разрешения для Android (Камера и память)
 android.permissions = CAMERA,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
