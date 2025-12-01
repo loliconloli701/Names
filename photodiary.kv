@@ -1,0 +1,191 @@
+#:kivy 2.1.0
+
+<CameraScreen>:
+    name: "camera"
+    last_photo_path: ""
+
+    MDBoxLayout:
+        orientation: "vertical"
+
+        MDTopAppBar:
+            title: "Фото-Дневник"
+            right_action_items: [["export", lambda x: app.export_data()], ["theme-light-dark", lambda x: app.toggle_theme()]]
+            elevation: 2
+
+        ScrollView:
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: "20dp"
+                spacing: "15dp"
+                adaptive_height: True
+
+                # Окно видоискателя
+                MDCard:
+                    size_hint_y: None
+                    height: "400dp"
+                    radius: [15,]
+                    elevation: 1
+                    clip: True
+
+                    RelativeLayout:
+                        Camera:
+                            id: camera_widget
+                            resolution: (640, 480)
+                            play: True
+                            allow_stretch: True
+                            keep_ratio: True
+                            # Для Android иногда нужно повернуть камеру
+                            # index: 0
+
+                        # Картинка поверх камеры (превью после снимка)
+                        Image:
+                            source: root.last_photo_path if root.last_photo_path else ""
+                            opacity: 1 if root.last_photo_path else 0
+                            allow_stretch: True
+                            keep_ratio: True
+
+                MDRaisedButton:
+                    text: "СДЕЛАТЬ СНИМОК"
+                    icon: "camera"
+                    pos_hint: {"center_x": .5}
+                    size_hint_x: 0.9
+                    md_bg_color: 0.2, 0.6, 1, 1
+                    on_release: app.capture_photo()
+
+                MDTextField:
+                    id: category_input
+                    hint_text: "Категория (Школа, Спорт...)"
+                    mode: "rectangle"
+
+                MDTextField:
+                    id: note_input
+                    hint_text: "Заметка..."
+                    mode: "rectangle"
+                    multiline: True
+                    max_height: "120dp"
+
+                MDBoxLayout:
+                    spacing: "10dp"
+                    adaptive_height: True
+
+                    MDRaisedButton:
+                        text: "СОХРАНИТЬ"
+                        size_hint_x: 1
+                        md_bg_color: app.theme_cls.primary_color
+                        on_release: app.save_current_entry()
+
+                    MDFlatButton:
+                        text: "ГАЛЕРЕЯ"
+                        size_hint_x: 1
+                        on_release: app.root.current = "gallery"
+
+<GalleryScreen>:
+    name: "gallery"
+
+    MDBoxLayout:
+        orientation: "vertical"
+
+        MDTopAppBar:
+            title: "Галерея"
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'camera')]]
+            elevation: 2
+
+        MDBoxLayout:
+            padding: "10dp"
+            spacing: "10dp"
+            adaptive_height: True
+
+            MDTextField:
+                id: search_field
+                hint_text: "Поиск..."
+                mode: "round"
+                size_hint_x: 0.6
+                on_text: root.filter_gallery(self.text)
+
+            MDRectangleFlatIconButton:
+                id: filter_btn
+                icon: "filter"
+                text: "Все"
+                size_hint_x: 0.4
+                on_release: root.open_category_menu(self)
+
+        ScrollView:
+            MDBoxLayout:
+                id: entries_box
+                orientation: "vertical"
+                padding: "10dp"
+                spacing: "15dp"
+                adaptive_height: True
+
+<EntryItem>:
+    orientation: "vertical"
+    size_hint_y: None
+    height: "300dp"
+    padding: "0dp"
+    radius: [15,]
+    elevation: 2
+    on_release: app.open_viewer(root.photo_path)
+
+    FitImage:
+        source: root.photo_path
+        size_hint_y: 0.6
+        radius: [15, 15, 0, 0]
+
+    MDBoxLayout:
+        orientation: "vertical"
+        padding: "10dp"
+        size_hint_y: 0.4
+
+        MDBoxLayout:
+            adaptive_height: True
+            MDLabel:
+                text: root.category
+                theme_text_color: "Primary"
+                bold: True
+                font_style: "Caption"
+            MDLabel:
+                text: root.date
+                halign: "right"
+                theme_text_color: "Hint"
+                font_style: "Caption"
+
+        MDLabel:
+            text: root.note
+            font_style: "Body1"
+            shorten: True
+            shorten_from: 'right'
+            max_lines: 2
+
+        MDBoxLayout:
+            adaptive_height: True
+            spacing: "10dp"
+
+            MDIconButton:
+                icon: "pencil"
+                on_release: app.open_edit(root.entry_id, root.note)
+
+            Widget:
+
+            MDIconButton:
+                icon: "delete"
+                theme_text_color: "Error"
+                on_release: app.confirm_delete(root.entry_id, root.photo_path)
+
+<ViewerScreen>:
+    name: "viewer"
+    MDBoxLayout:
+        orientation: "vertical"
+        md_bg_color: 0, 0, 0, 1
+
+        MDTopAppBar:
+            title: "Просмотр"
+            left_action_items: [["arrow-left", lambda x: setattr(app.root, 'current', 'gallery')]]
+
+        Image:
+            source: root.photo_path
+            allow_stretch: True
+            keep_ratio: True
+ScreenManager:
+    CameraScreen:
+    GalleryScreen:
+    ViewerScreen:
