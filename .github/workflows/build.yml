@@ -5,12 +5,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      # Очистка места на диске сервера
+      # 1. Освобождаем место на сервере (чтобы сборка не упала от нехватки памяти)
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -19,17 +19,31 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: true
+          docker-images: true
           swap-storage: true
 
-      # Сборка APK через Buildozer
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action-v1@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+      # 2. Устанавливаем все нужные программы (как в Colab)
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip build-essential git python3 python3-dev \
+            ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
+            libsdl2-ttf-dev libportmidi-dev libswscale-dev \
+            libavformat-dev libavcodec-dev zlib1g-dev \
+            libffi-dev libssl-dev autoconf libtool openjdk-17-jdk
+          
+          # Ставим Buildozer и правильную версию Cython
+          pip3 install --upgrade pip
+          pip3 install buildozer cython==0.29.33
 
-      # Загрузка готового файла
+      # 3. Запускаем сборку
+      - name: Build with Buildozer
+        run: |
+          # Команда yes автоматически принимает лицензии
+          yes | buildozer android debug
+
+      # 4. Сохраняем готовый файл APK
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
